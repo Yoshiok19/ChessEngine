@@ -9,6 +9,11 @@ public class BoardRepresentation {
         generateBoard();
         drawBoard(allBitboards);
 
+        long x = 1095216660480L;
+        long y = (x - 1);
+        System.out.println(y);
+        System.out.println(convertToBitBoard("0000000000000000000000001111111100000000000000000000000000000000"));
+
 
     }
     public static void generateBoard() {
