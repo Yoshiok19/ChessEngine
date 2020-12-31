@@ -9,11 +9,16 @@ public class Moves {
     // Creating constants for parts of the board for easy checking down the line.
     static long RANK1 = -72057594037927936L; //"1111111100000000000000000000000000000000000000000000000000000000"
     static long RANK8 = 255L; //"0000000000000000000000000000000000000000000000000000000011111111"
-        static long RANK4 = 1095216660480L; //"0000000000000000000000001111111100000000000000000000000000000000"
+    static long RANK4 = 1095216660480L; //"0000000000000000000000001111111100000000000000000000000000000000"
     static long RANK5 = 4278190080L; //"0000000000000000000000000000000011111111000000000000000000000000"
     static long FILEA = 72340172838076673L; //"0000000100000001000000010000000100000001000000010000000100000001"
     static long FILEH = -9187201950435737472L; //"1000000010000000100000001000000010000000100000001000000010000000"
-
+    // Files A to H
+    static long[] FILES = {72340172838076673L, 144680345676153346L, 289360691352306692L, 578721382704613384L,
+                           1157442765409226768L, 2314885530818453536L, 4629771061636907072L, -9187201950435737472L};
+    // Ranks 1 to 8
+    static long[] RANKS = {-72057594037927936L, 71776119061217280L, 280375465082880L, 1095216660480L, 4278190080L,
+                           16711680L, 65280L, 255L};
 
     public static String possibleWhiteMoves(long[] allBitBoards){
         long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],
@@ -133,18 +138,34 @@ public class Moves {
 
         // En Passants:
 
-        //if (history.length() >= 16){ // At least 4 plys have been made (There are no positions before 4 plys have been
-                                     // made where an en passant is possible.
+        if (history.length() >= 16){ // At least 4 plys have been made (There are no positions before 4 plys have been
+                                     // made where an en passant is possible.)
+            if ((history.charAt(history.length()-1) == history.charAt(history.length()-3) &&
+                    Math.abs(history.charAt(history.length()-2)-history.charAt(history.length()-4))==2)){
+                // Checks that the last move was a 2 square move on the same file
 
+                // The file of the last move is used to check that only the pawn that moved on the last move is
+                // available to capture. See En_Passant_case.png
+                int file = history.charAt(history.length()-1);
 
+                long EN_PASSANT_RIGHT = (WP<<1)&BP&~FILEA&(FILES[file]); // Bitboard of the pawn to be captured
 
-        //}
+                // Since only one en passant is ever possible we don't loop over EN_PASSANT_RIGHT but just check if
+                // there is a move.
+                if (EN_PASSANT_RIGHT != 0){
+                    int i = Long.numberOfLeadingZeros(EN_PASSANT_RIGHT);
+                    allWPMoves += (i/8) + (i%8 - 1) + (i/8 - 1) + (i%8) + "E";
 
+                }
 
-
+                long EN_PASSANT_LEFT = (WP>>1)&BP&~FILEH&(FILES[file]);
+                if (EN_PASSANT_LEFT != 0){
+                    int i = Long.numberOfLeadingZeros(EN_PASSANT_LEFT);
+                    allWPMoves += (i/8) + (i%8 + 1) + (i/8 - 1) + (i%8) + "E";
+                }
+            }
+        }
         return allWPMoves;
-
-
     }
 
     public static String possibleWNMoves(long WN){
