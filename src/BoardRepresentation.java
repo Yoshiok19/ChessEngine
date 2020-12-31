@@ -9,7 +9,17 @@ public class BoardRepresentation {
         generateBoard();
         drawBoard(allBitboards);
 
-        System.out.println(0xFF00L);
+        long[] d = {
+                0x80L, 0x8040L, 0x804020L, 0x80402010L, 0x8040201008L, 0x804020100804L, 0x80402010080402L,
+                0x8040201008040201L, 0x4020100804020100L, 0x2010080402010000L, 0x1008040201000000L,
+                0x804020100000000L, 0x402010000000000L, 0x201000000000000L, 0x100000000000000L
+        };
+
+
+        for(long x:d){
+            System.out.println(x);
+        }
+
 
 
     }

@@ -1,0 +1,47 @@
+Hyperbola Quintessence:
+https://www.chessprogramming.org/Hyperbola_Quintessence
+
+Example 1: (see rank 4 in HyperbolaQuintessence.png)
+
+o = Pieces on 4th rank
+r = Only the slider piece(the rook)
+
+Checking left:
+o     11010101
+r     00010000
+o-r   11000101      Removes the slider piece from occupied
+o-2r  10110101      Borrows a 1 from the next nearest blocker in the direction. Since we do o^(o-2r) after,
+                    only the changed bits in o-2r are the valid sliding attacks going to the left.
+
+o^(o-2r) = 01100000
+
+Checking right:
+To check to the right we do the same thing but with o' and r'. However me must reverse it back at the end so that we get
+the moves going to the right.
+
+o'     10101011    Reversing both o and r
+r'     00001000             ||
+o'-r'  10100011    Same operations as left
+o'-2r' 10011011             ||
+
+o'^(o'-2r') = 00110000      ||
+
+(o'^(o'-2r'))' = 00001100    Reversing the whole thing so it goes to the right
+
+Simplify by distributing ' to each element : (o'^(o'-2r'))' = o^(o'-2r')'
+
+Both directions:
+HorizontalLineMoves = LeftMoves^RightMoves
+                    = 01100000^00001100
+                    = 01101100              All the moves the rook can make going horizontally
+
+
+Example 2: (No blockers)
+
+Checking left:
+o     00010101
+r     00010000
+o-r   00000101
+o-2r  11110101  No Blockers so every bit is changed.
+
+o^(o-2r) = 11100000

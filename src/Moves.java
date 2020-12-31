@@ -6,6 +6,7 @@ public class Moves {
     static long CAPTURABLE;
     static long BLACK_PIECES;
     static long EMPTY;
+    static long OCCUPIED;       // All the pieces on the board
     // Creating constants for parts of the board for easy checking down the line.
     static long RANK1 = -72057594037927936L; //"1111111100000000000000000000000000000000000000000000000000000000"
     static long RANK8 = 255L; //"0000000000000000000000000000000000000000000000000000000011111111"
@@ -13,12 +14,35 @@ public class Moves {
     static long RANK5 = 4278190080L; //"0000000000000000000000000000000011111111000000000000000000000000"
     static long FILEA = 72340172838076673L; //"0000000100000001000000010000000100000001000000010000000100000001"
     static long FILEH = -9187201950435737472L; //"1000000010000000100000001000000010000000100000001000000010000000"
+
     // Files A to H
     static long[] FILES = {72340172838076673L, 144680345676153346L, 289360691352306692L, 578721382704613384L,
                            1157442765409226768L, 2314885530818453536L, 4629771061636907072L, -9187201950435737472L};
+
     // Ranks 1 to 8
     static long[] RANKS = {-72057594037927936L, 71776119061217280L, 280375465082880L, 1095216660480L, 4278190080L,
                            16711680L, 65280L, 255L};
+
+    // All diagonals. Top left to bottom right
+    static long[] DIAGONALS = {1L, 258L, 66052L, 16909320L, 4328785936L, 1108169199648L, 283691315109952L,
+                               72624976668147840L, 145249953336295424L, 290499906672525312L, 580999813328273408L,
+                               1161999622361579520L, 2323998145211531264L, 4647714815446351872L, -9223372036854775808L};
+
+    // All anti-diagonals. Top right to bottom left
+    static long[] ANTI_DIAGONALS = {128L, 32832L, 8405024L, 2151686160L, 550831656968L, 141012904183812L,
+                                    36099303471055874L, -9205322385119247871L, 4620710844295151872L,
+                                    2310355422147575808L, 1155177711073755136L, 577588855528488960L,
+                                    288794425616760832L, 144396663052566528L, 72057594037927936L};
+
+    static long HVMoves(int position){
+        // Getting the bitboard containing only the slider.
+        long slider = 1L<<position;
+        // See Hyperbola Quintessence in concepts.txt for a full explanation for the following code
+        //(o^(o-2r))^(o^(o'-2r')')
+        long horizontalMoves = (OCCUPIED^(OCCUPIED-2*slider))^Long.reverse(OCCUPIED^(Long.reverse(OCCUPIED)-2*(Long.reverse(slider))));
+        long verticalMoves =
+    }
+
 
     public static String possibleWhiteMoves(long[] allBitBoards){
         long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],

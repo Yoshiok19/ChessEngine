@@ -1,0 +1,142 @@
+Hyperbola Quintessence:
+https://www.chessprogramming.org/Hyperbola_Quintessence
+
+Example 1: (see rank 4 in HyperbolaQuintessence.png)
+
+o = Pieces on 4th rank
+r = Only the slider piece(the rook)
+
+Checking left:
+o     11010101
+r     00010000
+o-r   11000101      Removes the slider piece from occupied
+o-2r  10110101      Borrows a 1 from the next nearest blocker in the direction. Since we do o^(o-2r) after,
+                    only the changed bits in o-2r are the valid sliding attacks going to the left.
+
+o^(o-2r) = 01100000
+
+Checking right:
+To check to the right we do the same thing but with o' and r'. However me must reverse it back at the end so that we get
+the moves going to the right.
+
+o'     10101011    Reversing both o and r
+r'     00001000             ||
+o'-r'  10100011    Same operations as left
+o'-2r' 10011011             ||
+
+o'^(o'-2r') = 00110000      ||
+
+(o'^(o'-2r'))' = 00001100    Reversing the whole thing so it goes to the right
+
+Simplify by distributing ' to each element : (o'^(o'-2r'))' = o^(o'-2r')'
+
+Both directions:
+HorizontalLineMoves = LeftMoves^RightMoves
+                    = 01100000^00001100
+                    = 01101100              All the moves the rook can make going horizontally
+
+
+Example 2: (No blockers)
+
+Checking left:
+o     00010101
+r     00010000
+o-r   00000101
+o-2r  11110101  No Blockers so every bit is changed.
+
+o^(o-2r) = 11100000
+
+Example 3: Full bitboard example (HyperbolaQuintessence.png)
+Note: Unlike the above two examples this is a full bitboard example reading the bitboard from right to left. (The right most digit is the black rook)
+
+Horizontal:
+When finding horizontal moves we do it exactly like example 1. We could & with the Rank Mask but it is unnecessary for
+horizontal moves because of how our bitboard is designed.
+
+OCCUPIED = 1111111101011100000000001010101100000000000000001111111111111111
+SLIDER =   0000000000000000000000000000100000000000000000000000000000000000
+OCCUPIED - SLIDER = 1111111101011100000000001010001100000000000000001111111111111111
+OCCUPIED - 2*SLIDER = 1111111101011100000000001010110100000000000000001111111111111111
+
+OCCUPIED ^ OCCUPIED - 2*SLIDER = 0000000000000000000000000000011000000000000000000000000000000000
+
+RANKS[3](4th rank) = 0000000000000000000000001111111100000000000000000000000000000000
+
+Both left and right:
+left^right = 0000000000000000000000000011011000000000000000000000000000000000
+
+
+00000000
+00000000
+00000000
+00110110
+00000000
+00000000
+00000000
+00000000
+
+left^right & RANKS[3] =
+0000000000000000000000000011011000000000000000000000000000000000
+
+& with the rank 4 mask doesn't change the output for horizontal moves.
+00000000
+00000000
+00000000
+00110110
+00000000
+00000000
+00000000
+00000000
+
+Vertical:
+When finding vertical or diagonal moves we must & with the appropriate file or diag mask to get the proper moves.
+
+OCCUPIED = 1111111101011100000000001010101100000000000000001111111111111111
+SLIDER =   0000000000000000000000000000100000000000000000000000000000000000
+
+FILES[3] = 0000100000001000000010000000100000001000000010000000100000001000
+
+OCCUPIED & FILES[3] = 0000000000001000000000000000100000000000000000000000100000000000
+
+00000000
+00001000
+00000000
+00001000
+00000000
+00000000
+00001000
+00000000
+
+OCCUPIED & FILES[3] - 2*SLIDER =
+
+0000000000000000000000000000100000000000000000000000000000000000
+0000000000001111111111111111100000000000000000000000100000000000
+
+Both up and down:
+
+down^up =
+0000000000001111111111111111111111111111111111111111100000000000
+
+As you can see here if we don't & with the 4th file mask we get all the squares in between
+00000000
+00001111
+11111111
+11111111
+11111111
+11111111
+11111000
+00000000
+
+(down^up)&FILES[3] = 0000000000001000000010000000100000001000000010000000100000000000
+
+Once we & with the 4th file mask we get the proper output.
+00000000
+00001000
+00001000
+00001000
+00001000
+00001000
+00001000
+00000000
+
+
