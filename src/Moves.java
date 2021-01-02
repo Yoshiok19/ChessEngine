@@ -34,13 +34,24 @@ public class Moves {
                                     2310355422147575808L, 1155177711073755136L, 577588855528488960L,
                                     288794425616760832L, 144396663052566528L, 72057594037927936L};
 
-    static long HVMoves(int position){
+    static long HVMoves(int s){
         // Getting the bitboard containing only the slider.
-        long slider = 1L<<position;
+        long SLIDER = 1L<<s;
         // See Hyperbola Quintessence in concepts.txt for a full explanation for the following code
-        //(o^(o-2r))^(o^(o'-2r')')
-        long horizontalMoves = (OCCUPIED^(OCCUPIED-2*slider))^Long.reverse(OCCUPIED^(Long.reverse(OCCUPIED)-2*(Long.reverse(slider))));
-        long verticalMoves =
+        //(o-2r)^(o'-2r')'
+        long horizontalMoves = ((OCCUPIED-2*SLIDER))^Long.reverse((Long.reverse(OCCUPIED)-2*(Long.reverse(SLIDER))));
+        long verticalMoves = ((OCCUPIED&FILES[s/8])-2*SLIDER)^Long.reverse((Long.reverse(OCCUPIED&FILES[s/8])-2*(Long.reverse(SLIDER))));
+
+        return horizontalMoves^verticalMoves&FILES[s/8];
+    }
+
+    static long DADMoves(int s){
+        long SLIDER = 1L<<s;
+        // s/8 + s%8 and s/8 + 7 - s%8 finds the correct Diagonal and anti-diagonal bitboards respectively.
+        long diagonalMoves = ((OCCUPIED&DIAGONALS[s/8 + s%8])-2*SLIDER)^Long.reverse((Long.reverse(OCCUPIED&DIAGONALS[s/8 + s%8])-2*(Long.reverse(SLIDER))));
+        long antiDiagonalMoves = ((OCCUPIED&ANTI_DIAGONALS[s/8 + s%8])-2*SLIDER)^Long.reverse((Long.reverse(OCCUPIED&ANTI_DIAGONALS[s/8 + 7 - s%8])-2*(Long.reverse(SLIDER))));
+
+        return diagonalMoves&DIAGONALS[s/8 + s%8]^antiDiagonalMoves&ANTI_DIAGONALS[s/8 + 7 - s%8];
     }
 
 
@@ -60,12 +71,18 @@ public class Moves {
 
         String history = ""; // History is empty for now.
 
-        String allWhiteMoves = possibleWPMoves(WP, BP, history) + possibleWNMoves(WN);
+        String allWhiteMoves = possibleWPMoves(WP, BP, history);
 
         return allWhiteMoves;
 
     }
 
+    public static String possibleWB(long WB){
+
+        return "";
+
+
+    }
 
 
     public static String possibleWPMoves(long WP, long BP, String history){
@@ -190,11 +207,6 @@ public class Moves {
             }
         }
         return allWPMoves;
-    }
-
-    public static String possibleWNMoves(long WN){
-
-        return "";
     }
 
 }
