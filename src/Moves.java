@@ -71,19 +71,12 @@ public class Moves {
 
         String history = ""; // History is empty for now.
 
-        String allWhiteMoves = possibleWPMoves(WP, BP, history);
+        String allWhiteMoves = possibleWPMoves(WP, BP, history) + possibleWBMoves(OCCUPIED, WB) +
+                possibleWRMoves(OCCUPIED, WR) + possibleWQMoves(OCCUPIED, WQ);
 
         return allWhiteMoves;
 
     }
-
-    public static String possibleWB(long WB){
-
-        return "";
-
-
-    }
-
 
     public static String possibleWPMoves(long WP, long BP, String history){
         String allWPMoves = "";
@@ -98,7 +91,7 @@ public class Moves {
 
         // EXAMPLE: m = 0010100      m - 1 = 0010011     ~(m-1)= 1101100     m&~(m-1) = 000100 only the first move is 1.
 
-        long aMove = PAWN_RIGHT&(~PAWN_RIGHT-1);
+        long aMove = PAWN_RIGHT&~(PAWN_RIGHT-1);
 
         while(aMove != 0){
 
@@ -111,36 +104,36 @@ public class Moves {
             PAWN_RIGHT = PAWN_RIGHT&~aMove;
 
             // Doing the same thing as before but we move onto the next move.
-            aMove = PAWN_RIGHT&(~PAWN_RIGHT-1);
+            aMove = PAWN_RIGHT&~(PAWN_RIGHT-1);
         }
         // All legal moves for a white pawn capturing to the left.
         long PAWN_LEFT = (WP>>9)&(BLACK_PIECES)&~(RANK8)&~(FILEH);
-        aMove = PAWN_LEFT&(~PAWN_LEFT-1);
+        aMove = PAWN_LEFT&~(PAWN_LEFT-1);
         while(aMove != 0){
             int i = Long.numberOfTrailingZeros(aMove);
             allWPMoves += (i/8 + 1) + (i%8 + 1) + (i/8) + (i % 8);
             PAWN_LEFT = PAWN_LEFT&~aMove;
-            aMove = PAWN_LEFT&(~PAWN_LEFT-1);
+            aMove = PAWN_LEFT&~(PAWN_LEFT-1);
         }
         // All legal moves for pushing a white pawn 1 square.
         long PAWN_PUSH = (WP>>8)&(EMPTY)&~(RANK8);
-        aMove = PAWN_PUSH&(~PAWN_PUSH-1);
+        aMove = PAWN_PUSH&~(PAWN_PUSH-1);
 
         while(aMove != 0){
             int i = Long.numberOfTrailingZeros(aMove);
             allWPMoves += (i/8 + 1) + (i%8) + (i/8) + (i % 8);
             PAWN_PUSH = PAWN_PUSH&~aMove;
-            aMove = PAWN_PUSH&(~PAWN_PUSH-1);
+            aMove = PAWN_PUSH&~(PAWN_PUSH-1);
         }
         // All legal moves for pushing a white pawn 2 squares. (this can only happen when the pawn is on the 2nd rank)
         long PAWN_LEAP = (WP>>16)&(EMPTY)&(EMPTY>>8)&(RANK4);
-        aMove = PAWN_LEAP&(~PAWN_LEAP-1);
+        aMove = PAWN_LEAP&~(PAWN_LEAP-1);
 
         while(aMove != 0){
             int i = Long.numberOfTrailingZeros(aMove);
             allWPMoves += (i/8 + 2) + (i%8) + (i/8) + (i % 8);
             PAWN_LEAP = PAWN_LEAP&~aMove;
-            aMove = PAWN_LEAP&(~PAWN_LEAP-1);
+            aMove = PAWN_LEAP&~(PAWN_LEAP-1);
         }
 
         // Promotions:
@@ -148,33 +141,33 @@ public class Moves {
 
         // All legal moves for pushing a white pawn 1 square with promotion.
         long PAWN_PROMOTION_FORWARD = (WP>>8)&(RANK8)&(EMPTY);
-        aMove = PAWN_PROMOTION_FORWARD&(~PAWN_PROMOTION_FORWARD-1);
+        aMove = PAWN_PROMOTION_FORWARD&~(PAWN_PROMOTION_FORWARD-1);
 
         while(aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
             allWPMoves += (i / 8 + 1) + (i % 8) + (i / 8) + (i % 8) + "P";
             PAWN_PROMOTION_FORWARD = PAWN_PROMOTION_FORWARD & ~aMove;
-            aMove = PAWN_PROMOTION_FORWARD & (~PAWN_PROMOTION_FORWARD - 1);
+            aMove = PAWN_PROMOTION_FORWARD & ~(PAWN_PROMOTION_FORWARD - 1);
         }
         // All legal moves for capturing to the right with promotion.
         long PAWN_PROMOTION_RIGHT = (WP>>7)&(RANK8)&(BLACK_PIECES)&~(FILEA);
-        aMove = PAWN_PROMOTION_RIGHT&(~PAWN_PROMOTION_RIGHT-1);
+        aMove = PAWN_PROMOTION_RIGHT&~(PAWN_PROMOTION_RIGHT-1);
 
         while(aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
             allWPMoves += (i/8 + 1) + (i%8 - 1) + (i/8) + (i % 8) + "P";
             PAWN_PROMOTION_RIGHT = PAWN_PROMOTION_RIGHT & ~aMove;
-            aMove = PAWN_PROMOTION_RIGHT & (~PAWN_PROMOTION_RIGHT - 1);
+            aMove = PAWN_PROMOTION_RIGHT & ~(PAWN_PROMOTION_RIGHT - 1);
         }
         // All legal moves for capturing to the left with promotion.
         long PAWN_PROMOTION_LEFT = (WP>>9)&(RANK8)&(BLACK_PIECES)&~(FILEH);
-        aMove = PAWN_PROMOTION_LEFT&(~PAWN_PROMOTION_LEFT-1);
+        aMove = PAWN_PROMOTION_LEFT&~(PAWN_PROMOTION_LEFT-1);
 
         while(aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
             allWPMoves += (i/8 + 1) + (i%8 + 1) + (i/8) + (i % 8) + "P";
             PAWN_PROMOTION_LEFT = PAWN_PROMOTION_LEFT & ~aMove;
-            aMove = PAWN_PROMOTION_LEFT & (~PAWN_PROMOTION_LEFT - 1);
+            aMove = PAWN_PROMOTION_LEFT & ~(PAWN_PROMOTION_LEFT - 1);
         }
 
         // En Passants:
@@ -208,5 +201,85 @@ public class Moves {
         }
         return allWPMoves;
     }
+
+    public static String possibleWBMoves(long OCCUPIED, long WB){
+        String allWBMoves = "";
+        // Getting the bitboard of one bishop
+        long aBishop = WB&~(WB-1);
+        long bishopMoves;
+
+        // Looping through every bishop on the board
+        while (aBishop != 0){
+            int bishopLocation = Long.numberOfTrailingZeros(aBishop);
+            // Getting all legal bishop moves. DADMoves() returns a bitboard of moves including every piece so we must
+            // & with the bitboard of capturable pieces
+            bishopMoves = DADMoves(bishopLocation)&CAPTURABLE;
+            // Getting the first bishop move
+            long aMove = bishopMoves&~(bishopMoves-1);
+            // Looping through every bishop move
+            while (aMove != 0){
+                // Getting the square of the move
+                int i = Long.numberOfTrailingZeros(aMove);
+                // Adding the move to the list.
+                allWBMoves += (bishopLocation/8) + (bishopLocation%8) + (i/8) + (i%8);
+                // Removing the move from the bitboard of all moves
+                bishopMoves = bishopMoves&(~aMove);
+                // Getting the next move
+                aMove = bishopMoves&~(bishopMoves-1);
+            }
+            // Removing the bishop. Since long is a primitive type this won't affect WB outside of this function.
+            WB = WB&~(aBishop);
+            // Getting the next bishop.
+            aBishop = WB&~(WB-1);
+        }
+        return allWBMoves;
+    }
+
+    public static String possibleWRMoves(long OCCUPIED, long WR){
+        String allWRMoves = "";
+        long aRook = WR&~(WR-1);
+        long rookMoves;
+
+        while (aRook != 0){
+            int rookLocation = Long.numberOfTrailingZeros(aRook);
+            // Same as bishop but with HVMoves() instead of DADMoves()
+            rookMoves = HVMoves(rookLocation)&CAPTURABLE;
+            long aMove = rookMoves&~(rookMoves-1);
+            while (aMove != 0){
+                int i = Long.numberOfTrailingZeros(aMove);
+                allWRMoves += (rookLocation/8) + (rookLocation%8) + (i/8) + (i%8);
+                rookMoves = rookMoves&(~aMove);
+                aMove = rookMoves&~(rookMoves-1);
+            }
+            WR = WR&~(aRook);
+            aRook = WR&~(WR-1);
+        }
+        return allWRMoves;
+    }
+
+    public static String possibleWQMoves(long OCCUPIED, long WQ){
+        String allWQMoves = "";
+        long aQueen = WQ&~(WQ-1);
+        long queenMoves;
+
+        while (aQueen != 0){
+            int queenLocation = Long.numberOfTrailingZeros(aQueen);
+            // We now use both HVMoves() and DADMoves()
+            queenMoves = (HVMoves(queenLocation)|DADMoves(queenLocation))&CAPTURABLE;
+            long aMove = queenMoves&~(queenMoves-1);
+            while (aMove != 0){
+                int i = Long.numberOfTrailingZeros(aMove);
+                allWQMoves += (queenLocation/8) + (queenLocation%8) + (i/8) + (i%8);
+                queenMoves = queenMoves&(~aMove);
+                aMove = queenMoves&~(queenMoves-1);
+            }
+            WQ = WQ&~(aQueen);
+            aQueen = WQ&~(WQ-1);
+        }
+        return allWQMoves;
+    }
+
+    }
+
 
 }

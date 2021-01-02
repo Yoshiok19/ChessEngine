@@ -8,20 +8,7 @@ public class BoardRepresentation {
         // For debugging purposes
         generateBoard();
         drawBoard(allBitboards);
-
-        long[] d = {
-                0x80L, 0x8040L, 0x804020L, 0x80402010L, 0x8040201008L, 0x804020100804L, 0x80402010080402L,
-                0x8040201008040201L, 0x4020100804020100L, 0x2010080402010000L, 0x1008040201000000L,
-                0x804020100000000L, 0x402010000000000L, 0x201000000000000L, 0x100000000000000L
-        };
-
-
-        for(long x:d){
-            System.out.println(x);
-        }
-
-
-
+        
     }
     public static void generateBoard() {
         // Initializing bitboards for every type of piece
@@ -111,6 +98,7 @@ public class BoardRepresentation {
             return Long.parseLong(stringBitboard, 2);
         }
         // The bitboard is negative so we must convert taking into account two's complement.
+        // Long.parseLong() doesn't treat the first 1 as a sign bit so you will get an overflow error.
 
         return Long.parseLong(stringBitboard.substring(1), 2) + Long.MIN_VALUE;
 
