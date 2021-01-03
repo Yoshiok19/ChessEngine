@@ -7,6 +7,8 @@ public class Moves {
     static long BLACK_PIECES;
     static long EMPTY;
     static long OCCUPIED;       // All the pieces on the board
+    static long KING_SPAN = 460039L; //"0000000000000000000000000000000000000000000001110000010100000111"
+    static long KNIGHT_SPAN = 43234889994L; //"0000000000000000000000000000101000010001000000000001000100001010"
     // Creating constants for parts of the board for easy checking down the line.
     static long RANK1 = -72057594037927936L; //"1111111100000000000000000000000000000000000000000000000000000000"
     static long RANK8 = 255L; //"0000000000000000000000000000000000000000000000000000000011111111"
@@ -279,7 +281,99 @@ public class Moves {
         return allWQMoves;
     }
 
+
+    public static String possibleWNMoves(long OCCUPIED, long WN){
+        String allWNMoves = "";
+        long aKnight = WN&~(WN-1);
+        long knightMoves= 0L;
+
+        while (aKnight != 0){
+            int knightLocation = Long.numberOfTrailingZeros(aKnight);
+            // Note: KNIGHT_SPAN is the span of a knight on square 18. 18 is chosen because it is the smallest square
+            // that the knight can be on while still showing all 8 moves.
+            if (knightLocation > 18){
+                // This means the knight is "in front of the span knight so we must left shift by the difference between
+                // the span knight and the actual knight
+                knightMoves = KNIGHT_SPAN<<(knightLocation-18);
+            }else{
+                // This means the knight is "behind" the span knight so we right shift by 18 - location
+                knightMoves = KNIGHT_SPAN>>(18 - knightLocation);
+            }
+
+            // Depending on where the knight is, shifting KNIGHT_SPAN may result in invalid moves. This is to remove those invalid moves
+            if (knightLocation%8 < 4){
+                // When the knight is on rank 1-4 all invalid moves from shifting will be on the GH files.
+                knightMoves = knightMoves&CAPTURABLE&~FILES[6]&~FILEH;
+            }else{
+                // When the knight is on rank 4-8 all invalid moves from shifting will be on the AB files.
+                knightMoves = knightMoves&CAPTURABLE&~FILEA&~FILES[1];
+            }
+            // Same as every other piece
+            long aMove = knightMoves&~(knightMoves-1);
+            while (aMove != 0){
+                int i = Long.numberOfTrailingZeros(aMove);
+                allWNMoves += (knightLocation/8) + (knightLocation%8) + (i/8) + (i%8);
+                knightMoves = knightMoves&(~aMove);
+                aMove = knightMoves&~(knightMoves-1);
+            }
+            WN = WN&~(aKnight);
+            aKnight = WN&~(WN-1);
+        }
+        return allWNMoves;
+
+    }
+
+    public static String possibleWKMoves(long OCCUPIED, long WK){
+        String allWKMoves = "";
+        long aKing = WK&~(WK-1);
+        long kingMoves= 0L;
+
+        while (aKing != 0){
+            int kingLocation = Long.numberOfTrailingZeros(aKing);
+            // Note: KING_SPAN is the span of a king on square 9. 9 is chosen because it is the smallest square
+            // that the king can be on while still showing all 8 moves.
+
+            // Exactly the same as possibleWNMoves() but with KING_SPAN instead.
+            if (kingLocation > 18){
+                kingMoves = KING_SPAN<<(kingLocation-9);
+            }else{
+                kingMoves = KING_SPAN>>(9 - kingLocation);
+            }
+            if (kingLocation%8 < 4){
+                kingMoves = kingMoves&CAPTURABLE&~FILES[6]&~FILEH;
+            }else{
+                kingMoves = kingMoves&CAPTURABLE&~FILEA&~FILES[1];
+            }
+
+            long aMove = kingMoves&~(kingMoves-1);
+            while (aMove != 0){
+                int i = Long.numberOfTrailingZeros(aMove);
+                allWKMoves += (kingLocation/8) + (kingLocation%8) + (i/8) + (i%8);
+                kingMoves = kingMoves&(~aMove);
+                aMove = kingMoves&~(kingMoves-1);
+            }
+            WK = WK&~(aKing);
+            aKing = WK&~(WK-1);
+        }
+        return allWKMoves;
+
+    }
+
+    public static long unsafeForWhite(long[] allBitBoards){
+        long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],
+                WQ = allBitBoards[4], WK = allBitBoards[5], BP =allBitBoards[6], BB =allBitBoards[7],
+                BN = allBitBoards[8], BR = allBitBoards[9], BQ = allBitBoards[10], BK = allBitBoards[11];
+
+        
+
+
+
     }
 
 
+
+
 }
+
+
+
