@@ -9,7 +9,6 @@ public class BoardRepresentation {
         generateBoard();
         drawBoard(allBitboards);
 
-        System.out.println(convertToBitBoard("0000000000000000000000000000000000000000000001110000010100000111"));
     }
     public static void generateBoard() {
         // Initializing bitboards for every type of piece
