@@ -36,6 +36,90 @@ public class Moves {
             2310355422147575808L, 1155177711073755136L, 577588855528488960L,
             288794425616760832L, 144396663052566528L, 72057594037927936L};
 
+    /** Makes the move for the specified piece.
+     *
+     *
+     * @param board
+     * @param move
+     * @param piece
+     */
+    public static long makeMove(long board, String move, char piece){
+
+
+        if (move.charAt(4) == 'P'){
+            // Promotion
+            int start, end;
+            // Different cases for white and black promotion. Recall: Promotion move format: initial y + final y + Piece to promote to + P
+            if (Character.isUpperCase(move.charAt(2))){
+                // White pawn promotion
+
+                // Getting the square number of the initial and final position
+                start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[6]);
+                end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[7]);
+            } else{
+                // Black pawn promotion
+
+                // Getting the square number of the initial and final position
+                start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[1]);
+                end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[0]);
+            }
+            // Check if the move is for the piece that board represents. 
+            if (((board>>start)&1) == 1){
+                // Removing the piece at the initial position from the board
+                board = board & ~(1L<<start);
+            } else {
+                // Removing the captured piece if there is one.
+                board = board & ~(1L<<end);
+            }
+            // Adding the promoted piece to board
+            if (move.charAt(2) == piece) {
+                board = board | (1L << end);
+            }
+
+        } else if (move.charAt(3) == 'E'){
+            // En Passant
+            // Recall: En Passant move format: initial y of piece capturing + y of piece being captured + W + E
+                    int start, end;
+                    if (move.charAt(2) == 'W'){
+                        start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[4]);
+                        end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[5]);
+
+                    } else{
+                        start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[3]);
+                        end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[2]);
+                    }
+
+        } else{
+            // Regular Move
+
+            // Getting the square number of the initial and final position
+            int start = (Character.getNumericValue(move.charAt(0))*8) + (Character.getNumericValue(move.charAt(1)));
+            int end = (Character.getNumericValue(move.charAt(2))*8) + (Character.getNumericValue(move.charAt(3)));
+
+            // Check if the move is for the piece that board represents. (In other words check whether there is a piece
+            // on board at square start)
+            if (((board>>start)&1) == 1){
+                // Removing the piece at the initial position from the board
+                board = board & ~(1L<<start);
+                // Adding the piece to the board at the final position. Note that when we are capturing(There is a piece
+                // at the end position) we will not remove it now but when we call makeMove() on the piece getting captured
+                board = board |(1L<<end);
+            } else{
+                // Here we know that the move is not being made by the piece that board represents. However we need to
+                // check if this piece is being captured. To do this we check if the square at end for the board is a 1.
+                board = board & ~(1L<<end);
+            }
+
+        }
+
+        return board;
+    }
+
+    /** Returns the horizontal and vertical moves of the piece at square s taking into account blocking pieces.
+     *
+     * @param s the position of the piece on the board(square number)
+     * @return bitboard of horizontal and vertical moves
+     */
     static long HVMoves(int s) {
         // Getting the bitboard containing only the slider.
         long SLIDER = 1L << s;
@@ -47,6 +131,11 @@ public class Moves {
         return horizontalMoves ^ verticalMoves & FILES[s / 8];
     }
 
+    /** Returns the diagonal an anti-diagonal moves of the piece at square s taking into account blocking pieces.
+     *
+     * @param s the position of the piece on the board(square number)
+     * @return bitboard of diagonal and anti-diagonal moves
+     */
     static long DADMoves(int s) {
         long SLIDER = 1L << s;
         // s/8 + s%8 and s/8 + 7 - s%8 finds the correct Diagonal and anti-diagonal bitboards respectively.
@@ -56,7 +145,11 @@ public class Moves {
         return diagonalMoves & DIAGONALS[s / 8 + s % 8] ^ antiDiagonalMoves & ANTI_DIAGONALS[s / 8 + 7 - s % 8];
     }
 
-
+    /** Returns all possible moves for white for the current board state. Moves are always 4 characters long.
+     *
+     * @param allBitBoards List of bitboards for each piece
+     * @return String of all possible moves for white
+     */
     public static String possibleWhiteMoves(long[] allBitBoards) {
         long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],
                 WQ = allBitBoards[4], WK = allBitBoards[5], BP = allBitBoards[6], BB = allBitBoards[7],
@@ -78,12 +171,17 @@ public class Moves {
         String history = ""; // History is empty for now.
 
         String allWhiteMoves = possibleWPMoves(WP, BP, history) + possibleBishopMoves(OCCUPIED, WB) + possibleKnightMoves(OCCUPIED, WN) +
-                possibleRookMoves(OCCUPIED, WR) + possibleQueenMoves(OCCUPIED, WQ) + possibleKingMoves(OCCUPIED, WK);
+                possibleRookMoves(OCCUPIED, WR) + possibleQueenMoves(OCCUPIED, WQ) + possibleKingMoves(OCCUPIED, WK) + whiteCastling();
 
         return allWhiteMoves;
 
     }
 
+    /** Returns all possible moves for black for the current board state. Moves are always 4 characters long.
+     *
+     * @param allBitBoards List of bitboards for each piece
+     * @return String of all possible moves for black
+     */
     public static String possibleBlackMoves(long[] allBitBoards) {
         long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],
                 WQ = allBitBoards[4], WK = allBitBoards[5], BP = allBitBoards[6], BB = allBitBoards[7],
@@ -103,11 +201,18 @@ public class Moves {
         String history = "";
 
         String allBlackMoves = possibleBPMoves(BP, WP, history) + possibleBishopMoves(OCCUPIED, BB) + possibleKnightMoves(OCCUPIED, BN) +
-                possibleRookMoves(OCCUPIED, BR) + possibleQueenMoves(OCCUPIED, BQ) + possibleKingMoves(OCCUPIED, BK);
+                possibleRookMoves(OCCUPIED, BR) + possibleQueenMoves(OCCUPIED, BQ) + possibleKingMoves(OCCUPIED, BK) + blackCastling();
 
         return allBlackMoves;
     }
 
+    /** Returns all possible moves for white pawns.
+     *
+     * @param WP Bitboard of white pawns
+     * @param BP Bitboard of black pawns
+     * @param history All past moves for the current game
+     * @return String of all possible moves for white pawns
+     */
     public static String possibleWPMoves(long WP, long BP, String history) {
         String allWPMoves = "";
 
@@ -167,7 +272,7 @@ public class Moves {
         }
 
         // Promotions:
-        // For now promotion is indicated with a "P" at the end
+        // The move format for promotions are: initial y + final y + Piece to promote to + P
 
         // All legal moves for pushing a white pawn 1 square with promotion.
         long PAWN_PROMOTION_FORWARD = (WP >> 8) & (RANK8) & (EMPTY);
@@ -175,7 +280,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 + 1) + (i % 8) + (i / 8) + (i % 8) + "P";
+            allWPMoves += (i % 8) + (i % 8) + "BP" + (i % 8) + (i % 8) + "NP" + (i % 8) + (i % 8) + "RP" + (i % 8) + (i % 8) + "QP";
             PAWN_PROMOTION_FORWARD = PAWN_PROMOTION_FORWARD & ~aMove;
             aMove = PAWN_PROMOTION_FORWARD & ~(PAWN_PROMOTION_FORWARD - 1);
         }
@@ -185,7 +290,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 + 1) + (i % 8 - 1) + (i / 8) + (i % 8) + "P";
+            allWPMoves += (i%8-1) + (i%8) + "BP" + (i%8-1) + (i%8) + "NP" + (i%8-1) + (i%8) + "RP" + (i%8-1) + (i%8) + "QP";
             PAWN_PROMOTION_RIGHT = PAWN_PROMOTION_RIGHT & ~aMove;
             aMove = PAWN_PROMOTION_RIGHT & ~(PAWN_PROMOTION_RIGHT - 1);
         }
@@ -195,12 +300,13 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 + 1) + (i % 8 + 1) + (i / 8) + (i % 8) + "P";
+            allWPMoves += (i % 8 + 1) + (i % 8) + "BP" + (i % 8 + 1) + (i % 8) + "NP" + (i % 8 + 1) + (i % 8) + "RP" + (i % 8 + 1) + (i % 8) + "QP";
             PAWN_PROMOTION_LEFT = PAWN_PROMOTION_LEFT & ~aMove;
             aMove = PAWN_PROMOTION_LEFT & ~(PAWN_PROMOTION_LEFT - 1);
         }
 
         // En Passants:
+        // The move format for En Passants: initial y of piece capturing + y of piece being captured + W + E
 
         if (history.length() >= 16) { // At least 4 plys have been made (There are no positions before 4 plys have been
             // made where an en passant is possible.)
@@ -218,20 +324,27 @@ public class Moves {
                 // there is a move.
                 if (EN_PASSANT_RIGHT != 0) {
                     int i = Long.numberOfLeadingZeros(EN_PASSANT_RIGHT);
-                    allWPMoves += (i / 8) + (i % 8 - 1) + (i / 8 - 1) + (i % 8) + "E";
+                    allWPMoves += (i % 8 - 1) + (i % 8) + "WE";
 
                 }
 
                 long EN_PASSANT_LEFT = (WP >> 1) & BP & ~FILEH & (FILES[file]);
                 if (EN_PASSANT_LEFT != 0) {
                     int i = Long.numberOfLeadingZeros(EN_PASSANT_LEFT);
-                    allWPMoves += (i / 8) + (i % 8 + 1) + (i / 8 - 1) + (i % 8) + "E";
+                    allWPMoves += (i % 8 + 1) + (i % 8) + "WE";
                 }
             }
         }
         return allWPMoves;
     }
 
+    /** Returns all possible moves for black pawns.
+     *
+     * @param BP Bitboard of black pawns
+     * @param WP Bitboard of white pawns
+     * @param history All past moves for the current game
+     * @return String of all possible moves for black pawns
+     */
     public static String possibleBPMoves(long BP, long WP, String history) {
         String allWPMoves = "";
         // All legal moves for a black pawn capturing to the right.
@@ -282,7 +395,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 - 1) + (i % 8) + (i / 8) + (i % 8) + "P";
+            allWPMoves += (i % 8) + (i % 8) + "bP" + (i % 8) + (i % 8) + "nP" + (i % 8) + (i % 8) + "rP" + (i % 8) + (i % 8) + "qP";
             PAWN_PROMOTION_FORWARD = PAWN_PROMOTION_FORWARD & ~aMove;
             aMove = PAWN_PROMOTION_FORWARD & ~(PAWN_PROMOTION_FORWARD - 1);
         }
@@ -292,7 +405,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 - 1) + (i % 8 + 1) + (i / 8) + (i % 8) + "P";
+            allWPMoves += (i % 8 + 1) + (i % 8) + "bP" + (i % 8 + 1) + (i % 8) + "nP" + (i % 8 + 1) + (i % 8) + "rP" + (i % 8 + 1) + (i % 8) + "qP";
             PAWN_PROMOTION_RIGHT = PAWN_PROMOTION_RIGHT & ~aMove;
             aMove = PAWN_PROMOTION_RIGHT & ~(PAWN_PROMOTION_RIGHT - 1);
         }
@@ -302,7 +415,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 - 1) + (i % 8 - 1) + (i / 8) + (i % 8) + "P";
+            allWPMoves += (i % 8 - 1) + (i % 8) + "bP" + (i % 8 - 1) + (i % 8) + "nP" + (i % 8 - 1) + (i % 8) + "rP" + (i % 8 - 1) + (i % 8) + "qP";
             PAWN_PROMOTION_LEFT = PAWN_PROMOTION_LEFT & ~aMove;
             aMove = PAWN_PROMOTION_LEFT & ~(PAWN_PROMOTION_LEFT - 1);
         }
@@ -324,22 +437,27 @@ public class Moves {
                 // there is a move.
                 if (EN_PASSANT_RIGHT != 0) {
                     int i = Long.numberOfLeadingZeros(EN_PASSANT_RIGHT);
-                    allWPMoves += (i / 8) + (i % 8 + 1) + (i / 8 + 1) + (i % 8) + "E";
+                    allWPMoves += (i % 8 + 1) + (i % 8) + "BE";
 
                 }
 
                 long EN_PASSANT_LEFT = (BP << 1) & WP & ~FILEA & (FILES[file]);
                 if (EN_PASSANT_LEFT != 0) {
                     int i = Long.numberOfLeadingZeros(EN_PASSANT_LEFT);
-                    allWPMoves += (i / 8) + (i % 8 - 1) + (i / 8 + 1) + (i % 8) + "E";
+                    allWPMoves += (i % 8 - 1) + (i % 8) + "BE";
                 }
             }
         }
         return allWPMoves;
 
-
     }
 
+    /** Returns all possible bishop moves.
+     *
+     * @param OCCUPIED Bitboard of all occupied squares
+     * @param bishops Bitboard of all bishops of a certain colour
+     * @return String of all possible bishop moves
+     */
     public static String possibleBishopMoves(long OCCUPIED, long bishops) {
         String allBishopMoves = "";
         // Getting the bitboard of one bishop
@@ -373,6 +491,12 @@ public class Moves {
         return allBishopMoves;
     }
 
+    /** Returns all possible rook moves.
+     *
+     * @param OCCUPIED Bitboard of all occupied squares
+     * @param rooks Bitboard of all rooks of a certain colour
+     * @return String of all possible rook moves
+     */
     public static String possibleRookMoves(long OCCUPIED, long rooks) {
         String allRookMoves = "";
         long aRook = rooks & ~(rooks - 1);
@@ -395,6 +519,12 @@ public class Moves {
         return allRookMoves;
     }
 
+    /** Returns all possible queen moves.
+     *
+     * @param OCCUPIED Bitboard of all occupied squares
+     * @param queens Bitboard of all queens of a certain colour
+     * @return String of all possible queen moves
+     */
     public static String possibleQueenMoves(long OCCUPIED, long queens) {
         String allQueenMoves = "";
         long aQueen = queens & ~(queens - 1);
@@ -417,7 +547,12 @@ public class Moves {
         return allQueenMoves;
     }
 
-
+    /** Returns all possible knight moves.
+     *
+     * @param OCCUPIED Bitboard of all occupied squares
+     * @param knights Bitboard of all knights of a certain colour
+     * @return String of all possible knight moves
+     */
     public static String possibleKnightMoves(long OCCUPIED, long knights) {
         String allKnightMoves = "";
         long aKnight = knights & ~(knights - 1);
@@ -458,6 +593,12 @@ public class Moves {
         return allKnightMoves;
     }
 
+    /** Returns all possible king moves.
+     *
+     * @param OCCUPIED Bitboard of all occupied squares
+     * @param king Bitboard of the king.
+     * @return String of all possible king moves
+     */
     public static String possibleKingMoves(long OCCUPIED, long king) {
         String allKingMoves = "";
         long kingMoves;
@@ -488,6 +629,10 @@ public class Moves {
         return allKingMoves;
     }
 
+    /** Returns possible castling moves for white.
+     *
+     * @return String of possible castling moves or "" if none are possible
+     */
     public static String whiteCastling(){
         String castles = "";
         if (WCASTLEK){
@@ -501,6 +646,10 @@ public class Moves {
         return castles;
     }
 
+    /** Returns possible castling moves for black.
+     *
+     * @return String of possible castling moves or "" if none are possible
+     */
     public static String blackCastling(){
         String castles = "";
         if (BCASTLEK){
@@ -511,9 +660,11 @@ public class Moves {
         }
         return castles;
     }
-    
-    /**
-     * Return the bitboard containing all squares covered by black. (Black can capture if there is a piece there)
+
+    /** Return the bitboard containing all squares covered by black. (Black can capture if there is a piece there)
+     *
+     * @param allBitBoards List of bitboards of every type of piece
+     * @return Bitboard of all squares covered by black
      */
     public static long coveredByBlack(long[] allBitBoards) {
         long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],
@@ -597,6 +748,11 @@ public class Moves {
         return covered;
     }
 
+    /** Return the bitboard containing all squares covered by white. (White can capture if there is a piece there)
+     *
+     * @param allBitBoards List of bitboards of every type of piece
+     * @return Bitboard of all squares covered by white
+     */
     public static long coveredByWhite(long[] allBitBoards) {
         long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],
                 WQ = allBitBoards[4], WK = allBitBoards[5], BP = allBitBoards[6], BB = allBitBoards[7],

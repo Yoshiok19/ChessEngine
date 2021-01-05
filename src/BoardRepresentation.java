@@ -9,6 +9,7 @@ public class BoardRepresentation {
         generateBoard();
         drawBoard(allBitboards);
 
+
     }
     public static void generateBoard() {
         // Initializing bitboards for every type of piece
