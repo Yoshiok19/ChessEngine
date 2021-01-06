@@ -1,5 +1,7 @@
 package src;
 
+import java.util.Optional;
+
 public class Moves {
     static boolean WCASTLEK = true, WCASTLEQ = true, BCASTLEK = true, BCASTLEQ = true; // King side/queen side castling booleans
     static long CAPTURABLE;
@@ -39,12 +41,11 @@ public class Moves {
     /** Makes the move for the specified piece.
      *
      *
-     * @param board
-     * @param move
-     * @param piece
+     * @param board Bitboard of piece
+     * @param move 4 character chess move
+     * @param piece Character representing a type of piece
      */
     public static long makeMove(long board, String move, char piece){
-
 
         if (move.charAt(4) == 'P'){
             // Promotion
@@ -53,65 +54,74 @@ public class Moves {
             if (Character.isUpperCase(move.charAt(2))){
                 // White pawn promotion
 
-                // Getting the square number of the initial and final position
+                // Getting the square number of the initial and final squares
                 start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[6]);
                 end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[7]);
             } else{
                 // Black pawn promotion
 
-                // Getting the square number of the initial and final position
+                // Getting the square number of the initial and final squares
                 start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[1]);
                 end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[0]);
             }
-            // Check if the move is for the piece that board represents. 
+            // Check if the move is for the piece that board represents.
             if (((board>>start)&1) == 1){
-                // Removing the piece at the initial position from the board
+                // Removing the piece at the initial square from the board
                 board = board & ~(1L<<start);
             } else {
-                // Removing the captured piece if there is one.
+                // Removing the captured piece from the final square if there is one.
                 board = board & ~(1L<<end);
             }
-            // Adding the promoted piece to board
+            // Adding the promoted piece to the board at the final square
             if (move.charAt(2) == piece) {
                 board = board | (1L << end);
             }
-
         } else if (move.charAt(3) == 'E'){
             // En Passant
             // Recall: En Passant move format: initial y of piece capturing + y of piece being captured + W + E
-                    int start, end;
+                    int start, end, captured;
                     if (move.charAt(2) == 'W'){
+                        // White en passant
+                        // Getting the square number of the initial square and final square for the pawn capturing
                         start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[4]);
                         end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[5]);
-
+                        // Getting the square number of the captured piece
+                        captured = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[4]);
                     } else{
                         start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[3]);
                         end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[2]);
+                        captured = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[3]);
                     }
-
+                    if (((board>>start)&1) == 1){
+                        // Removing the piece at the initial position from the board
+                        board = board & ~(1L<<start);
+                        // Adding the piece to the board at the final position.
+                        board = board |(1L<<end);
+                    } else{
+                        board = board & ~(1L<<captured);
+                    }
         } else{
             // Regular Move
 
-            // Getting the square number of the initial and final position
+            // Getting the square number of the initial and final squares
             int start = (Character.getNumericValue(move.charAt(0))*8) + (Character.getNumericValue(move.charAt(1)));
             int end = (Character.getNumericValue(move.charAt(2))*8) + (Character.getNumericValue(move.charAt(3)));
 
             // Check if the move is for the piece that board represents. (In other words check whether there is a piece
             // on board at square start)
             if (((board>>start)&1) == 1){
-                // Removing the piece at the initial position from the board
+                // Removing the piece at the initial square from the board
                 board = board & ~(1L<<start);
-                // Adding the piece to the board at the final position. Note that when we are capturing(There is a piece
-                // at the end position) we will not remove it now but when we call makeMove() on the piece getting captured
+                // Adding the piece to the board at the final square. Note: When we are capturing(There is a piece
+                // on the end square) we will not remove it now but when we call makeMove() on the piece getting captured
                 board = board |(1L<<end);
             } else{
                 // Here we know that the move is not being made by the piece that board represents. However we need to
-                // check if this piece is being captured. To do this we check if the square at end for the board is a 1.
+                // check if this piece is being captured. To do this we check if the end square for the board has a 1 then remove it using &~
                 board = board & ~(1L<<end);
             }
 
         }
-
         return board;
     }
 
@@ -233,7 +243,7 @@ public class Moves {
             // Getting the square of the move.
             int i = Long.numberOfTrailingZeros(aMove);
             // Recording the move with the starting and ending coordinates.
-            allWPMoves += (i / 8 + 1) + (i % 8 - 1) + (i / 8) + (i % 8);
+            allWPMoves += "" + (i / 8 + 1) + (i % 8 - 1) + (i / 8) + (i % 8);
 
             // Removing the move from the total move bitboard.
             PAWN_RIGHT = PAWN_RIGHT & ~aMove;
@@ -246,7 +256,7 @@ public class Moves {
         aMove = PAWN_LEFT & ~(PAWN_LEFT - 1);
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 + 1) + (i % 8 + 1) + (i / 8) + (i % 8);
+            allWPMoves += "" + (i / 8 + 1) + (i % 8 + 1) + (i / 8) + (i % 8);
             PAWN_LEFT = PAWN_LEFT & ~aMove;
             aMove = PAWN_LEFT & ~(PAWN_LEFT - 1);
         }
@@ -256,7 +266,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 + 1) + (i % 8) + (i / 8) + (i % 8);
+            allWPMoves += "" + (i / 8 + 1) + (i % 8) + (i / 8) + (i % 8);
             PAWN_PUSH = PAWN_PUSH & ~aMove;
             aMove = PAWN_PUSH & ~(PAWN_PUSH - 1);
         }
@@ -266,7 +276,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 + 2) + (i % 8) + (i / 8) + (i % 8);
+            allWPMoves += "" + (i / 8 + 2) + (i % 8) + (i / 8) + (i % 8);
             PAWN_LEAP = PAWN_LEAP & ~aMove;
             aMove = PAWN_LEAP & ~(PAWN_LEAP - 1);
         }
@@ -280,7 +290,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i % 8) + (i % 8) + "BP" + (i % 8) + (i % 8) + "NP" + (i % 8) + (i % 8) + "RP" + (i % 8) + (i % 8) + "QP";
+            allWPMoves += "" + (i % 8) + (i % 8) + "BP" + (i % 8) + (i % 8) + "NP" + (i % 8) + (i % 8) + "RP" + (i % 8) + (i % 8) + "QP";
             PAWN_PROMOTION_FORWARD = PAWN_PROMOTION_FORWARD & ~aMove;
             aMove = PAWN_PROMOTION_FORWARD & ~(PAWN_PROMOTION_FORWARD - 1);
         }
@@ -290,7 +300,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i%8-1) + (i%8) + "BP" + (i%8-1) + (i%8) + "NP" + (i%8-1) + (i%8) + "RP" + (i%8-1) + (i%8) + "QP";
+            allWPMoves += "" + (i%8-1) + (i%8) + "BP" + (i%8-1) + (i%8) + "NP" + (i%8-1) + (i%8) + "RP" + (i%8-1) + (i%8) + "QP";
             PAWN_PROMOTION_RIGHT = PAWN_PROMOTION_RIGHT & ~aMove;
             aMove = PAWN_PROMOTION_RIGHT & ~(PAWN_PROMOTION_RIGHT - 1);
         }
@@ -300,7 +310,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i % 8 + 1) + (i % 8) + "BP" + (i % 8 + 1) + (i % 8) + "NP" + (i % 8 + 1) + (i % 8) + "RP" + (i % 8 + 1) + (i % 8) + "QP";
+            allWPMoves += "" + (i % 8 + 1) + (i % 8) + "BP" + (i % 8 + 1) + (i % 8) + "NP" + (i % 8 + 1) + (i % 8) + "RP" + (i % 8 + 1) + (i % 8) + "QP";
             PAWN_PROMOTION_LEFT = PAWN_PROMOTION_LEFT & ~aMove;
             aMove = PAWN_PROMOTION_LEFT & ~(PAWN_PROMOTION_LEFT - 1);
         }
@@ -324,14 +334,14 @@ public class Moves {
                 // there is a move.
                 if (EN_PASSANT_RIGHT != 0) {
                     int i = Long.numberOfLeadingZeros(EN_PASSANT_RIGHT);
-                    allWPMoves += (i % 8 - 1) + (i % 8) + "WE";
+                    allWPMoves += "" + (i % 8 - 1) + (i % 8) + "WE";
 
                 }
 
                 long EN_PASSANT_LEFT = (WP >> 1) & BP & ~FILEH & (FILES[file]);
                 if (EN_PASSANT_LEFT != 0) {
                     int i = Long.numberOfLeadingZeros(EN_PASSANT_LEFT);
-                    allWPMoves += (i % 8 + 1) + (i % 8) + "WE";
+                    allWPMoves += "" + (i % 8 + 1) + (i % 8) + "WE";
                 }
             }
         }
@@ -354,7 +364,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 - 1) + (i % 8 + 1) + (i / 8) + (i % 8);
+            allWPMoves += "" + (i / 8 - 1) + (i % 8 + 1) + (i / 8) + (i % 8);
             PAWN_RIGHT = PAWN_RIGHT & ~aMove;
             aMove = PAWN_RIGHT & ~(PAWN_RIGHT - 1);
         }
@@ -363,7 +373,7 @@ public class Moves {
         aMove = PAWN_LEFT & ~(PAWN_LEFT - 1);
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 - 1) + (i % 8 - 1) + (i / 8) + (i % 8);
+            allWPMoves += "" + (i / 8 - 1) + (i % 8 - 1) + (i / 8) + (i % 8);
             PAWN_LEFT = PAWN_LEFT & ~aMove;
             aMove = PAWN_LEFT & ~(PAWN_LEFT - 1);
         }
@@ -373,7 +383,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 - 1) + (i % 8) + (i / 8) + (i % 8);
+            allWPMoves += "" + (i / 8 - 1) + (i % 8) + (i / 8) + (i % 8);
             PAWN_PUSH = PAWN_PUSH & ~aMove;
             aMove = PAWN_PUSH & ~(PAWN_PUSH - 1);
         }
@@ -383,7 +393,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i / 8 - 2) + (i % 8) + (i / 8) + (i % 8);
+            allWPMoves += "" + (i / 8 - 2) + (i % 8) + (i / 8) + (i % 8);
             PAWN_LEAP = PAWN_LEAP & ~aMove;
             aMove = PAWN_LEAP & ~(PAWN_LEAP - 1);
         }
@@ -395,7 +405,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i % 8) + (i % 8) + "bP" + (i % 8) + (i % 8) + "nP" + (i % 8) + (i % 8) + "rP" + (i % 8) + (i % 8) + "qP";
+            allWPMoves += "" + (i % 8) + (i % 8) + "bP" + (i % 8) + (i % 8) + "nP" + (i % 8) + (i % 8) + "rP" + (i % 8) + (i % 8) + "qP";
             PAWN_PROMOTION_FORWARD = PAWN_PROMOTION_FORWARD & ~aMove;
             aMove = PAWN_PROMOTION_FORWARD & ~(PAWN_PROMOTION_FORWARD - 1);
         }
@@ -405,7 +415,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i % 8 + 1) + (i % 8) + "bP" + (i % 8 + 1) + (i % 8) + "nP" + (i % 8 + 1) + (i % 8) + "rP" + (i % 8 + 1) + (i % 8) + "qP";
+            allWPMoves += "" + (i % 8 + 1) + (i % 8) + "bP" + (i % 8 + 1) + (i % 8) + "nP" + (i % 8 + 1) + (i % 8) + "rP" + (i % 8 + 1) + (i % 8) + "qP";
             PAWN_PROMOTION_RIGHT = PAWN_PROMOTION_RIGHT & ~aMove;
             aMove = PAWN_PROMOTION_RIGHT & ~(PAWN_PROMOTION_RIGHT - 1);
         }
@@ -415,7 +425,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += (i % 8 - 1) + (i % 8) + "bP" + (i % 8 - 1) + (i % 8) + "nP" + (i % 8 - 1) + (i % 8) + "rP" + (i % 8 - 1) + (i % 8) + "qP";
+            allWPMoves += "" + (i % 8 - 1) + (i % 8) + "bP" + (i % 8 - 1) + (i % 8) + "nP" + (i % 8 - 1) + (i % 8) + "rP" + (i % 8 - 1) + (i % 8) + "qP";
             PAWN_PROMOTION_LEFT = PAWN_PROMOTION_LEFT & ~aMove;
             aMove = PAWN_PROMOTION_LEFT & ~(PAWN_PROMOTION_LEFT - 1);
         }
@@ -437,14 +447,14 @@ public class Moves {
                 // there is a move.
                 if (EN_PASSANT_RIGHT != 0) {
                     int i = Long.numberOfLeadingZeros(EN_PASSANT_RIGHT);
-                    allWPMoves += (i % 8 + 1) + (i % 8) + "BE";
+                    allWPMoves += "" + (i % 8 + 1) + (i % 8) + "BE";
 
                 }
 
                 long EN_PASSANT_LEFT = (BP << 1) & WP & ~FILEA & (FILES[file]);
                 if (EN_PASSANT_LEFT != 0) {
                     int i = Long.numberOfLeadingZeros(EN_PASSANT_LEFT);
-                    allWPMoves += (i % 8 - 1) + (i % 8) + "BE";
+                    allWPMoves += "" + (i % 8 - 1) + (i % 8) + "BE";
                 }
             }
         }
@@ -477,7 +487,7 @@ public class Moves {
                 // Getting the square of the move
                 int i = Long.numberOfTrailingZeros(aMove);
                 // Adding the move to the list.
-                allBishopMoves += (bishopLocation / 8) + (bishopLocation % 8) + (i / 8) + (i % 8);
+                allBishopMoves += "" + (bishopLocation / 8) + (bishopLocation % 8) + (i / 8) + (i % 8);
                 // Removing the move from the bitboard of all moves
                 bishopMoves = bishopMoves & (~aMove);
                 // Getting the next move
@@ -509,7 +519,7 @@ public class Moves {
             long aMove = rookMoves & ~(rookMoves - 1);
             while (aMove != 0) {
                 int i = Long.numberOfTrailingZeros(aMove);
-                allRookMoves += (rookLocation / 8) + (rookLocation % 8) + (i / 8) + (i % 8);
+                allRookMoves += "" + (rookLocation / 8) + (rookLocation % 8) + (i / 8) + (i % 8);
                 rookMoves = rookMoves & (~aMove);
                 aMove = rookMoves & ~(rookMoves - 1);
             }
@@ -537,7 +547,7 @@ public class Moves {
             long aMove = queenMoves & ~(queenMoves - 1);
             while (aMove != 0) {
                 int i = Long.numberOfTrailingZeros(aMove);
-                allQueenMoves += (queenLocation / 8) + (queenLocation % 8) + (i / 8) + (i % 8);
+                allQueenMoves += "" + (queenLocation / 8) + (queenLocation % 8) + (i / 8) + (i % 8);
                 queenMoves = queenMoves & (~aMove);
                 aMove = queenMoves & ~(queenMoves - 1);
             }
@@ -583,7 +593,7 @@ public class Moves {
             long aMove = knightMoves & ~(knightMoves - 1);
             while (aMove != 0) {
                 int i = Long.numberOfTrailingZeros(aMove);
-                allKnightMoves += (knightLocation / 8) + (knightLocation % 8) + (i / 8) + (i % 8);
+                allKnightMoves += "" + (knightLocation/8) + (knightLocation%8) + (i/8) + (i%8);
                 knightMoves = knightMoves & (~aMove);
                 aMove = knightMoves & ~(knightMoves - 1);
             }
@@ -622,7 +632,7 @@ public class Moves {
         long aMove = kingMoves & ~(kingMoves - 1);
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allKingMoves += (kingLocation / 8) + (kingLocation % 8) + (i / 8) + (i % 8);
+            allKingMoves += "" + (kingLocation / 8) + (kingLocation % 8) + (i / 8) + (i % 8);
             kingMoves = kingMoves & (~aMove);
             aMove = kingMoves & ~(kingMoves - 1);
         }
@@ -636,12 +646,16 @@ public class Moves {
     public static String whiteCastling(){
         String castles = "";
         if (WCASTLEK){
-            // Castling king side
-            castles += "7476";
+            // Castling king side. Checking if squares 61 and 62 are empty
+            if ((OCCUPIED&((1L<<61)|(1L<<62)))==0){
+                castles += "7476";
+            }
         }
         if (WCASTLEQ){
-            // Castling queen side
-            castles += "7472";
+            // Castling queen side. Checking if squares 57, 58, 59 are empty
+            if ((OCCUPIED&((1L<<57)|(1L<<58)|(1L<<59)))==0){
+                castles += "7472";
+            }
         }
         return castles;
     }
@@ -653,10 +667,14 @@ public class Moves {
     public static String blackCastling(){
         String castles = "";
         if (BCASTLEK){
-            castles += "0406";
+            if ((OCCUPIED&((1L<<5)|(1L<<6)))==0){
+                castles += "0406";
+            }
         }
         if (BCASTLEQ){
-            castles += "0402";
+            if ((OCCUPIED&((1L<<1)|(1L<<2)|(1L<<3)))==0){
+                castles += "0402";
+            }
         }
         return castles;
     }

@@ -8,6 +8,9 @@ public class BoardRepresentation {
         // For debugging purposes
         generateBoard();
         drawBoard(allBitboards);
+        String moves = Moves.possibleWhiteMoves(BoardRepresentation.allBitboards);
+        String black = Moves.possibleBlackMoves(BoardRepresentation.allBitboards);
+        System.out.println(moves.length()/4 + black.length()/4);
 
 
     }
