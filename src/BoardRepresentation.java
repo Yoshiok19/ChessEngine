@@ -8,9 +8,8 @@ public class BoardRepresentation {
         // For debugging purposes
         generateBoard();
         drawBoard(allBitboards);
-        String moves = Moves.possibleWhiteMoves(BoardRepresentation.allBitboards);
-        String black = Moves.possibleBlackMoves(BoardRepresentation.allBitboards);
-        System.out.println(moves.length()/4 + black.length()/4);
+
+
 
 
     }
@@ -34,8 +33,12 @@ public class BoardRepresentation {
         };
 
         convertToBitBoards(chessBoard, allBitboards);
+        WP = allBitboards[0]; WB = allBitboards[1]; WN = allBitboards[2]; WR = allBitboards[3];
+        WQ = allBitboards[4]; WK = allBitboards[5]; BP = allBitboards[6]; BB = allBitboards[7];
+        BN = allBitboards[8]; BR = allBitboards[9]; BQ = allBitboards[10]; BK = allBitboards[11];
 
-
+        PerftTesting.perft(WP,WB,WN,WR,WQ,WK,BP,BB,BN,BR,BQ,BK,0,Moves.wkcastle, Moves.wqcastle, Moves.bkcastle, Moves.bqcastle, true);
+        System.out.println(PerftTesting.perftCounter);
     }
 
 
@@ -89,9 +92,6 @@ public class BoardRepresentation {
             }
 
         }
-
-
-
     }
 
     public static long convertToBitBoard(String stringBitboard){
