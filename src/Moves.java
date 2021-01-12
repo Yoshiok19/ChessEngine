@@ -3,7 +3,7 @@ package src;
 import java.util.Optional;
 
 public class Moves {
-    static boolean WCASTLEK = true, WCASTLEQ = true, BCASTLEK = true, BCASTLEQ = true; // King side/queen side castling booleans
+    static boolean wkcastle = true, wqcastle = true, bkcastle = true, bqcastle = true; // King side/queen side castling booleans
     static long CAPTURABLE;
     static long WHITE_PIECES;
     static long BLACK_PIECES;
@@ -23,9 +23,8 @@ public class Moves {
     static long[] FILES = {72340172838076673L, 144680345676153346L, 289360691352306692L, 578721382704613384L,
             1157442765409226768L, 2314885530818453536L, 4629771061636907072L, -9187201950435737472L};
 
-    // Ranks 1 to 8
-    static long[] RANKS = {-72057594037927936L, 71776119061217280L, 280375465082880L, 1095216660480L, 4278190080L,
-            16711680L, 65280L, 255L};
+    // Ranks 8 to 1
+    static long[] RANKS = {255L, 65280L, 16711680L, 4278190080L, 1095216660480L, 280375465082880L, 71776119061217280L,-72057594037927936L};
 
     // All diagonals. Top left to bottom right
     static long[] DIAGONALS = {1L, 258L, 66052L, 16909320L, 4328785936L, 1108169199648L, 283691315109952L,
@@ -47,7 +46,7 @@ public class Moves {
      */
     public static long makeMove(long board, String move, char piece){
 
-        if (move.charAt(4) == 'P'){
+        if (move.charAt(3) == 'P'){
             // Promotion
             int start, end;
             // Different cases for white and black promotion. Recall: Promotion move format: initial y + final y + Piece to promote to + P
@@ -136,9 +135,9 @@ public class Moves {
         // See Hyperbola Quintessence in concepts.txt for a full explanation for the following code
         //(o-2r)^(o'-2r')'
         long horizontalMoves = ((OCCUPIED - 2 * SLIDER)) ^ Long.reverse((Long.reverse(OCCUPIED) - 2 * (Long.reverse(SLIDER))));
-        long verticalMoves = ((OCCUPIED & FILES[s / 8]) - 2 * SLIDER) ^ Long.reverse((Long.reverse(OCCUPIED & FILES[s / 8]) - 2 * (Long.reverse(SLIDER))));
+        long verticalMoves = ((OCCUPIED & FILES[s % 8]) - 2 * SLIDER) ^ Long.reverse((Long.reverse(OCCUPIED & FILES[s % 8]) - 2 * (Long.reverse(SLIDER))));
 
-        return horizontalMoves ^ verticalMoves & FILES[s / 8];
+        return (horizontalMoves&RANKS[s/8]) | (verticalMoves & FILES[s % 8]);
     }
 
     /** Returns the diagonal an anti-diagonal moves of the piece at square s taking into account blocking pieces.
@@ -150,9 +149,9 @@ public class Moves {
         long SLIDER = 1L << s;
         // s/8 + s%8 and s/8 + 7 - s%8 finds the correct Diagonal and anti-diagonal bitboards respectively.
         long diagonalMoves = ((OCCUPIED & DIAGONALS[s / 8 + s % 8]) - 2 * SLIDER) ^ Long.reverse((Long.reverse(OCCUPIED & DIAGONALS[s / 8 + s % 8]) - 2 * (Long.reverse(SLIDER))));
-        long antiDiagonalMoves = ((OCCUPIED & ANTI_DIAGONALS[s / 8 + s % 8]) - 2 * SLIDER) ^ Long.reverse((Long.reverse(OCCUPIED & ANTI_DIAGONALS[s / 8 + 7 - s % 8]) - 2 * (Long.reverse(SLIDER))));
+        long antiDiagonalMoves = ((OCCUPIED & ANTI_DIAGONALS[s / 8 + 7 - s % 8]) - 2 * SLIDER) ^ Long.reverse((Long.reverse(OCCUPIED & ANTI_DIAGONALS[s / 8 + 7 - s % 8]) - 2 * (Long.reverse(SLIDER))));
 
-        return diagonalMoves & DIAGONALS[s / 8 + s % 8] ^ antiDiagonalMoves & ANTI_DIAGONALS[s / 8 + 7 - s % 8];
+        return (diagonalMoves & DIAGONALS[s / 8 + s % 8]) | (antiDiagonalMoves & ANTI_DIAGONALS[s / 8 + 7 - s % 8]);
     }
 
     /** Returns all possible moves for white for the current board state. Moves are always 4 characters long.
@@ -356,7 +355,7 @@ public class Moves {
      * @return String of all possible moves for black pawns
      */
     public static String possibleBPMoves(long BP, long WP, String history) {
-        String allWPMoves = "";
+        String allBPMoves = "";
         // All legal moves for a black pawn capturing to the right.
         long PAWN_RIGHT = (BP << 7) & (WHITE_PIECES) & ~(RANK1) & ~(FILEH);
 
@@ -364,7 +363,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += "" + (i / 8 - 1) + (i % 8 + 1) + (i / 8) + (i % 8);
+            allBPMoves += "" + (i / 8 - 1) + (i % 8 + 1) + (i / 8) + (i % 8);
             PAWN_RIGHT = PAWN_RIGHT & ~aMove;
             aMove = PAWN_RIGHT & ~(PAWN_RIGHT - 1);
         }
@@ -373,7 +372,7 @@ public class Moves {
         aMove = PAWN_LEFT & ~(PAWN_LEFT - 1);
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += "" + (i / 8 - 1) + (i % 8 - 1) + (i / 8) + (i % 8);
+            allBPMoves += "" + (i / 8 - 1) + (i % 8 - 1) + (i / 8) + (i % 8);
             PAWN_LEFT = PAWN_LEFT & ~aMove;
             aMove = PAWN_LEFT & ~(PAWN_LEFT - 1);
         }
@@ -383,7 +382,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += "" + (i / 8 - 1) + (i % 8) + (i / 8) + (i % 8);
+            allBPMoves += "" + (i / 8 - 1) + (i % 8) + (i / 8) + (i % 8);
             PAWN_PUSH = PAWN_PUSH & ~aMove;
             aMove = PAWN_PUSH & ~(PAWN_PUSH - 1);
         }
@@ -393,7 +392,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += "" + (i / 8 - 2) + (i % 8) + (i / 8) + (i % 8);
+            allBPMoves += "" + (i / 8 - 2) + (i % 8) + (i / 8) + (i % 8);
             PAWN_LEAP = PAWN_LEAP & ~aMove;
             aMove = PAWN_LEAP & ~(PAWN_LEAP - 1);
         }
@@ -405,27 +404,27 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += "" + (i % 8) + (i % 8) + "bP" + (i % 8) + (i % 8) + "nP" + (i % 8) + (i % 8) + "rP" + (i % 8) + (i % 8) + "qP";
+            allBPMoves += "" + (i % 8) + (i % 8) + "bP" + (i % 8) + (i % 8) + "nP" + (i % 8) + (i % 8) + "rP" + (i % 8) + (i % 8) + "qP";
             PAWN_PROMOTION_FORWARD = PAWN_PROMOTION_FORWARD & ~aMove;
             aMove = PAWN_PROMOTION_FORWARD & ~(PAWN_PROMOTION_FORWARD - 1);
         }
         // All legal moves for capturing to the right with promotion.
-        long PAWN_PROMOTION_RIGHT = (BP << 7) & (RANK1) & (WHITE_PIECES) & ~(FILEH);
+        long PAWN_PROMOTION_RIGHT = (BP << 7) & (RANK1)&(WHITE_PIECES) & ~(FILEH);
         aMove = PAWN_PROMOTION_RIGHT & ~(PAWN_PROMOTION_RIGHT - 1);
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += "" + (i % 8 + 1) + (i % 8) + "bP" + (i % 8 + 1) + (i % 8) + "nP" + (i % 8 + 1) + (i % 8) + "rP" + (i % 8 + 1) + (i % 8) + "qP";
+            allBPMoves += "" + (i % 8 + 1) + (i % 8) + "bP" + (i % 8 + 1) + (i % 8) + "nP" + (i % 8 + 1) + (i % 8) + "rP" + (i % 8 + 1) + (i % 8) + "qP";
             PAWN_PROMOTION_RIGHT = PAWN_PROMOTION_RIGHT & ~aMove;
             aMove = PAWN_PROMOTION_RIGHT & ~(PAWN_PROMOTION_RIGHT - 1);
         }
         // All legal moves for capturing to the left with promotion.
-        long PAWN_PROMOTION_LEFT = (BP << 9) & (RANK1) & (WHITE_PIECES) & ~(FILEA);
+        long PAWN_PROMOTION_LEFT = (BP << 9) & (RANK1) &(WHITE_PIECES) & ~(FILEA);
         aMove = PAWN_PROMOTION_LEFT & ~(PAWN_PROMOTION_LEFT - 1);
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += "" + (i % 8 - 1) + (i % 8) + "bP" + (i % 8 - 1) + (i % 8) + "nP" + (i % 8 - 1) + (i % 8) + "rP" + (i % 8 - 1) + (i % 8) + "qP";
+            allBPMoves += "" + (i % 8 - 1) + (i % 8) + "bP" + (i % 8 - 1) + (i % 8) + "nP" + (i % 8 - 1) + (i % 8) + "rP" + (i % 8 - 1) + (i % 8) + "qP";
             PAWN_PROMOTION_LEFT = PAWN_PROMOTION_LEFT & ~aMove;
             aMove = PAWN_PROMOTION_LEFT & ~(PAWN_PROMOTION_LEFT - 1);
         }
@@ -447,18 +446,18 @@ public class Moves {
                 // there is a move.
                 if (EN_PASSANT_RIGHT != 0) {
                     int i = Long.numberOfLeadingZeros(EN_PASSANT_RIGHT);
-                    allWPMoves += "" + (i % 8 + 1) + (i % 8) + "BE";
+                    allBPMoves += "" + (i % 8 + 1) + (i % 8) + "BE";
 
                 }
 
                 long EN_PASSANT_LEFT = (BP << 1) & WP & ~FILEA & (FILES[file]);
                 if (EN_PASSANT_LEFT != 0) {
                     int i = Long.numberOfLeadingZeros(EN_PASSANT_LEFT);
-                    allWPMoves += "" + (i % 8 - 1) + (i % 8) + "BE";
+                    allBPMoves += "" + (i % 8 - 1) + (i % 8) + "BE";
                 }
             }
         }
-        return allWPMoves;
+        return allBPMoves;
 
     }
 
@@ -566,14 +565,14 @@ public class Moves {
     public static String possibleKnightMoves(long OCCUPIED, long knights) {
         String allKnightMoves = "";
         long aKnight = knights & ~(knights - 1);
-        long knightMoves = 0L;
+        long knightMoves;
 
         while (aKnight != 0) {
             int knightLocation = Long.numberOfTrailingZeros(aKnight);
             // Note: KNIGHT_SPAN is the span of a knight on square 18. 18 is chosen because it is the smallest square
             // that the knight can be on while still showing all 8 moves.
             if (knightLocation > 18) {
-                // This means the knight is "in front of the span knight so we must left shift by the difference between
+                // This means the knight is "in front" of the span knight so we must left shift by the difference between
                 // the span knight and the actual knight
                 knightMoves = KNIGHT_SPAN << (knightLocation - 18);
             } else {
@@ -645,13 +644,13 @@ public class Moves {
      */
     public static String whiteCastling(){
         String castles = "";
-        if (WCASTLEK){
+        if (wkcastle){
             // Castling king side. Checking if squares 61 and 62 are empty
             if ((OCCUPIED&((1L<<61)|(1L<<62)))==0){
                 castles += "7476";
             }
         }
-        if (WCASTLEQ){
+        if (wqcastle){
             // Castling queen side. Checking if squares 57, 58, 59 are empty
             if ((OCCUPIED&((1L<<57)|(1L<<58)|(1L<<59)))==0){
                 castles += "7472";
@@ -666,12 +665,12 @@ public class Moves {
      */
     public static String blackCastling(){
         String castles = "";
-        if (BCASTLEK){
+        if (bkcastle){
             if ((OCCUPIED&((1L<<5)|(1L<<6)))==0){
                 castles += "0406";
             }
         }
-        if (BCASTLEQ){
+        if (bqcastle){
             if ((OCCUPIED&((1L<<1)|(1L<<2)|(1L<<3)))==0){
                 castles += "0402";
             }
@@ -684,7 +683,7 @@ public class Moves {
      * @param allBitBoards List of bitboards of every type of piece
      * @return Bitboard of all squares covered by black
      */
-    public static long coveredByBlack(long[] allBitBoards) {
+    public static long coveredByWhite(long[] allBitBoards) {
         long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],
                 WQ = allBitBoards[4], WK = allBitBoards[5], BP = allBitBoards[6], BB = allBitBoards[7],
                 BN = allBitBoards[8], BR = allBitBoards[9], BQ = allBitBoards[10], BK = allBitBoards[11];
@@ -708,6 +707,11 @@ public class Moves {
             } else {
                 knightSquares = KNIGHT_SPAN >> (18 - knightLocation);
             }
+            if (knightLocation % 8 < 4) {
+                knightSquares = knightSquares & ~FILES[6] & ~FILEH;
+            } else {
+                knightSquares= knightSquares & ~FILEA & ~FILES[1];
+            }
             covered = covered | knightSquares;
             WN = WN & ~(aKnight);
             aKnight = WN & ~(WN - 1);
@@ -717,15 +721,15 @@ public class Moves {
         // Same code as possibleWKMoves()
         long kingSquares;
         int kingLocation = Long.numberOfTrailingZeros(WK);
-        if (kingLocation > 18) {
+        if (kingLocation > 9) {
             kingSquares = KING_SPAN << (kingLocation - 9);
         } else {
             kingSquares = KING_SPAN >> (9 - kingLocation);
         }
         if (kingLocation % 8 < 4) {
-            kingSquares = kingSquares & CAPTURABLE & ~FILES[6] & ~FILEH;
+            kingSquares = kingSquares & ~FILES[6] & ~FILEH;
         } else {
-            kingSquares = kingSquares & CAPTURABLE & ~FILEA & ~FILES[1];
+            kingSquares = kingSquares & ~FILEA & ~FILES[1];
         }
         covered = covered | kingSquares;
 
@@ -746,7 +750,6 @@ public class Moves {
         while (aRook != 0) {
             int rookLocation = Long.numberOfTrailingZeros(aRook);
             rookSquares = HVMoves(rookLocation);
-
             covered = covered | rookSquares;
             WR = WR & ~(aRook);
             aRook = WR & ~(WR - 1);
@@ -771,7 +774,7 @@ public class Moves {
      * @param allBitBoards List of bitboards of every type of piece
      * @return Bitboard of all squares covered by white
      */
-    public static long coveredByWhite(long[] allBitBoards) {
+    public static long coveredByBlack(long[] allBitBoards) {
         long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],
                 WQ = allBitBoards[4], WK = allBitBoards[5], BP = allBitBoards[6], BB = allBitBoards[7],
                 BN = allBitBoards[8], BR = allBitBoards[9], BQ = allBitBoards[10], BK = allBitBoards[11];
@@ -794,6 +797,11 @@ public class Moves {
             } else {
                 knightSquares = KNIGHT_SPAN >> (18 - knightLocation);
             }
+            if (knightLocation % 8 < 4) {
+                knightSquares = knightSquares & ~FILES[6] & ~FILEH;
+            } else {
+                knightSquares= knightSquares & ~FILEA & ~FILES[1];
+            }
             covered = covered | knightSquares;
             BN = BN & ~(aKnight);
             aKnight = BN & ~(BN - 1);
@@ -803,15 +811,15 @@ public class Moves {
         // Same code as possibleWKMoves()
         long kingSquares;
         int kingLocation = Long.numberOfTrailingZeros(BK);
-        if (kingLocation > 18) {
+        if (kingLocation > 9) {
             kingSquares = KING_SPAN << (kingLocation - 9);
         } else {
             kingSquares = KING_SPAN >> (9 - kingLocation);
         }
         if (kingLocation % 8 < 4) {
-            kingSquares = kingSquares & CAPTURABLE & ~FILES[6] & ~FILEH;
+            kingSquares = kingSquares & ~FILES[6] & ~FILEH;
         } else {
-            kingSquares = kingSquares & CAPTURABLE & ~FILEA & ~FILES[1];
+            kingSquares = kingSquares & ~FILEA & ~FILES[1];
         }
         covered = covered | kingSquares;
 
@@ -832,7 +840,6 @@ public class Moves {
         while (aRook != 0) {
             int rookLocation = Long.numberOfTrailingZeros(aRook);
             rookSquares = HVMoves(rookLocation);
-
             covered = covered | rookSquares;
             BR = BR & ~(aRook);
             aRook = BR & ~(BR - 1);
