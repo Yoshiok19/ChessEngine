@@ -54,14 +54,14 @@ public class Moves {
                 // White pawn promotion
 
                 // Getting the square number of the initial and final squares
-                start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[6]);
-                end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[7]);
+                start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[1]);
+                end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[0]);
             } else{
                 // Black pawn promotion
 
                 // Getting the square number of the initial and final squares
-                start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[1]);
-                end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[0]);
+                start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[6]);
+                end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[7]);
             }
             // Check if the move is for the piece that board represents.
             if (((board>>start)&1) == 1){
@@ -82,14 +82,14 @@ public class Moves {
                     if (move.charAt(2) == 'W'){
                         // White en passant
                         // Getting the square number of the initial square and final square for the pawn capturing
-                        start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[4]);
-                        end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[5]);
+                        start = Long.numberOfTrailingZeros(FILES[Character.getNumericValue(move.charAt(0))]&RANKS[3]);
+                        end = Long.numberOfTrailingZeros(FILES[Character.getNumericValue(move.charAt(1))]&RANKS[2]);
                         // Getting the square number of the captured piece
-                        captured = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[4]);
+                        captured = Long.numberOfTrailingZeros(FILES[Character.getNumericValue(move.charAt(1))]&RANKS[3]);
                     } else{
-                        start = Long.numberOfTrailingZeros(FILES[move.charAt(0)]&RANKS[3]);
-                        end = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[2]);
-                        captured = Long.numberOfTrailingZeros(FILES[move.charAt(1)]&RANKS[3]);
+                        start = Long.numberOfTrailingZeros(FILES[Character.getNumericValue(move.charAt(0))]&RANKS[4]);
+                        end = Long.numberOfTrailingZeros(FILES[Character.getNumericValue(move.charAt(1))]&RANKS[5]);
+                        captured = Long.numberOfTrailingZeros(FILES[Character.getNumericValue(move.charAt(1))]&RANKS[4]);
                     }
                     if (((board>>start)&1) == 1){
                         // Removing the piece at the initial position from the board
@@ -159,7 +159,7 @@ public class Moves {
      * @param allBitBoards List of bitboards for each piece
      * @return String of all possible moves for white
      */
-    public static String possibleWhiteMoves(long[] allBitBoards) {
+    public static String possibleWhiteMoves(long[] allBitBoards, String history) {
         long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],
                 WQ = allBitBoards[4], WK = allBitBoards[5], BP = allBitBoards[6], BB = allBitBoards[7],
                 BN = allBitBoards[8], BR = allBitBoards[9], BQ = allBitBoards[10], BK = allBitBoards[11];
@@ -177,7 +177,6 @@ public class Moves {
 
         // Note: Moves are in this format: startingx startingy endingx endingy (no spaces, commas, etc.)
 
-        String history = ""; // History is empty for now.
 
         String allWhiteMoves = possibleWPMoves(WP, BP, history) + possibleBishopMoves(OCCUPIED, WB) + possibleKnightMoves(OCCUPIED, WN) +
                 possibleRookMoves(OCCUPIED, WR) + possibleQueenMoves(OCCUPIED, WQ) + possibleKingMoves(OCCUPIED, WK) + whiteCastling();
@@ -191,7 +190,7 @@ public class Moves {
      * @param allBitBoards List of bitboards for each piece
      * @return String of all possible moves for black
      */
-    public static String possibleBlackMoves(long[] allBitBoards) {
+    public static String possibleBlackMoves(long[] allBitBoards, String history) {
         long WP = allBitBoards[0], WB = allBitBoards[1], WN = allBitBoards[2], WR = allBitBoards[3],
                 WQ = allBitBoards[4], WK = allBitBoards[5], BP = allBitBoards[6], BB = allBitBoards[7],
                 BN = allBitBoards[8], BR = allBitBoards[9], BQ = allBitBoards[10], BK = allBitBoards[11];
@@ -206,8 +205,6 @@ public class Moves {
         OCCUPIED = WP | WN | WB | WR | WQ | WK | BP | BN | BB | BR | BQ | BK;
         // Bitboard of empty squares;
         EMPTY = ~(OCCUPIED);
-
-        String history = "";
 
         String allBlackMoves = possibleBPMoves(BP, WP, history) + possibleBishopMoves(OCCUPIED, BB) + possibleKnightMoves(OCCUPIED, BN) +
                 possibleRookMoves(OCCUPIED, BR) + possibleQueenMoves(OCCUPIED, BQ) + possibleKingMoves(OCCUPIED, BK) + blackCastling();
@@ -299,7 +296,7 @@ public class Moves {
 
         while (aMove != 0) {
             int i = Long.numberOfTrailingZeros(aMove);
-            allWPMoves += "" + (i%8-1) + (i%8) + "BP" + (i%8-1) + (i%8) + "NP" + (i%8-1) + (i%8) + "RP" + (i%8-1) + (i%8) + "QP";
+            allWPMoves += "" + (i % 8 - 1) + (i % 8) + "BP" + (i % 8 - 1) + (i % 8) + "NP" + (i % 8 - 1) + (i % 8) + "RP" + (i % 8 - 1) + (i % 8) + "QP";
             PAWN_PROMOTION_RIGHT = PAWN_PROMOTION_RIGHT & ~aMove;
             aMove = PAWN_PROMOTION_RIGHT & ~(PAWN_PROMOTION_RIGHT - 1);
         }
@@ -317,30 +314,39 @@ public class Moves {
         // En Passants:
         // The move format for En Passants: initial y of piece capturing + y of piece being captured + W + E
 
-        if (history.length() >= 16) { // At least 4 plys have been made (There are no positions before 4 plys have been
-            // made where an en passant is possible.)
-            if ((history.charAt(history.length() - 1) == history.charAt(history.length() - 3) &&
-                    Math.abs(history.charAt(history.length() - 2) - history.charAt(history.length() - 4)) == 2)) {
-                // Checks that the last move was a 2 square move on the same file
+        if (history.length() >= 4) { // A move must have been made previously
 
-                // The file of the last move is used to check that only the pawn that moved on the last move is
-                // available to capture. See En_Passant_case.png
-                int file = history.charAt(history.length() - 1);
+            char initialx = history.charAt(history.length() - 4);
+            char initialy = history.charAt(history.length() - 3);
+            char finalx = history.charAt(history.length() - 2);
+            char finaly = history.charAt(history.length() - 1);
 
-                long EN_PASSANT_RIGHT = (WP << 1) & BP & ~FILEA & (FILES[file]); // Bitboard of the pawn to be captured
+            // Checks that the last move was a 2 square move on the same file
+            if (initialy == finaly && Math.abs(finalx - initialx) == 2) {
 
-                // Since only one en passant is ever possible we don't loop over EN_PASSANT_RIGHT but just check if
-                // there is a move.
-                if (EN_PASSANT_RIGHT != 0) {
-                    int i = Long.numberOfLeadingZeros(EN_PASSANT_RIGHT);
-                    allWPMoves += "" + (i % 8 - 1) + (i % 8) + "WE";
+                //Getting the square number of the ending square of the last move
+                int end = Character.getNumericValue(finalx) * 8 + Character.getNumericValue(finaly);
+                // Checking that the last move was by a black pawn
+                if (((BP >> end) & 1) == 1) {
+                    // The file of the last move is used to check that only the pawn that moved on the last move is
+                    // available to capture. See En_Passant_case.png
+                    int file = Character.getNumericValue(history.charAt(history.length() - 1));
 
-                }
+                    long EN_PASSANT_RIGHT = (WP << 1) & BP & ~FILEA & FILES[file] & RANK5; // Bitboard of the pawn to be captured
 
-                long EN_PASSANT_LEFT = (WP >> 1) & BP & ~FILEH & (FILES[file]);
-                if (EN_PASSANT_LEFT != 0) {
-                    int i = Long.numberOfLeadingZeros(EN_PASSANT_LEFT);
-                    allWPMoves += "" + (i % 8 + 1) + (i % 8) + "WE";
+                    // Since only one en passant is ever possible we don't loop over EN_PASSANT_RIGHT but just check if
+                    // there is a move.
+                    if (EN_PASSANT_RIGHT != 0) {
+                        int i = Long.numberOfTrailingZeros(EN_PASSANT_RIGHT);
+                        allWPMoves += "" + (i % 8 - 1) + (i % 8) + "WE";
+
+                    }
+
+                    long EN_PASSANT_LEFT = (WP >> 1) & BP & ~FILEH & (FILES[file]) & RANK5;
+                    if (EN_PASSANT_LEFT != 0) {
+                        int i = Long.numberOfTrailingZeros(EN_PASSANT_LEFT);
+                        allWPMoves += "" + (i % 8 + 1) + (i % 8) + "WE";
+                    }
                 }
             }
         }
@@ -409,7 +415,7 @@ public class Moves {
             aMove = PAWN_PROMOTION_FORWARD & ~(PAWN_PROMOTION_FORWARD - 1);
         }
         // All legal moves for capturing to the right with promotion.
-        long PAWN_PROMOTION_RIGHT = (BP << 7) & (RANK1)&(WHITE_PIECES) & ~(FILEH);
+        long PAWN_PROMOTION_RIGHT = (BP << 7) & (RANK1) & (WHITE_PIECES) & ~(FILEH);
         aMove = PAWN_PROMOTION_RIGHT & ~(PAWN_PROMOTION_RIGHT - 1);
 
         while (aMove != 0) {
@@ -419,7 +425,7 @@ public class Moves {
             aMove = PAWN_PROMOTION_RIGHT & ~(PAWN_PROMOTION_RIGHT - 1);
         }
         // All legal moves for capturing to the left with promotion.
-        long PAWN_PROMOTION_LEFT = (BP << 9) & (RANK1) &(WHITE_PIECES) & ~(FILEA);
+        long PAWN_PROMOTION_LEFT = (BP << 9) & (RANK1) & (WHITE_PIECES) & ~(FILEA);
         aMove = PAWN_PROMOTION_LEFT & ~(PAWN_PROMOTION_LEFT - 1);
 
         while (aMove != 0) {
@@ -431,34 +437,35 @@ public class Moves {
 
         // En Passants:
 
-        if (history.length() >= 16) {
-            if ((history.charAt(history.length() - 1) == history.charAt(history.length() - 3) &&
-                    Math.abs(history.charAt(history.length() - 2) - history.charAt(history.length() - 4)) == 2)) {
-                // Checks that the last move was a 2 square move on the same file
+        if (history.length() >= 4) {
+            char initialx = history.charAt(history.length() - 4);
+            char initialy = history.charAt(history.length() - 3);
+            char finalx = history.charAt(history.length() - 2);
+            char finaly = history.charAt(history.length() - 1);
 
-                // The file of the last move is used to check that only the pawn that moved on the last move is
-                // available to capture. See En_Passant_case.png
-                int file = history.charAt(history.length() - 1);
+            if (initialy == finaly && Math.abs(finalx - initialx) == 2) {
 
-                long EN_PASSANT_RIGHT = (BP >> 1) & WP & ~FILEH & (FILES[file]); // Bitboard of the pawn to be captured
+                int end = Character.getNumericValue(finalx) * 8 + Character.getNumericValue(finaly);
 
-                // Since only one en passant is ever possible we don't loop over EN_PASSANT_RIGHT but just check if
-                // there is a move.
-                if (EN_PASSANT_RIGHT != 0) {
-                    int i = Long.numberOfLeadingZeros(EN_PASSANT_RIGHT);
-                    allBPMoves += "" + (i % 8 + 1) + (i % 8) + "BE";
+                if (((WP >> end) & 1) == 1) {
 
-                }
+                    int file = Character.getNumericValue(history.charAt(history.length() - 1));
 
-                long EN_PASSANT_LEFT = (BP << 1) & WP & ~FILEA & (FILES[file]);
-                if (EN_PASSANT_LEFT != 0) {
-                    int i = Long.numberOfLeadingZeros(EN_PASSANT_LEFT);
-                    allBPMoves += "" + (i % 8 - 1) + (i % 8) + "BE";
+                    long EN_PASSANT_RIGHT = (BP >> 1) & WP & ~FILEH & (FILES[file]) & RANK4; // Bitboard of the pawn to be captured
+
+                    if (EN_PASSANT_RIGHT != 0) {
+                        int i = Long.numberOfTrailingZeros(EN_PASSANT_RIGHT);
+                        allBPMoves += "" + (i % 8 + 1) + (i % 8) + "BE";
+                    }
+                    long EN_PASSANT_LEFT = (BP << 1) & WP & ~FILEA & (FILES[file]) & RANK4;
+                    if (EN_PASSANT_LEFT != 0) {
+                        int i = Long.numberOfTrailingZeros(EN_PASSANT_LEFT);
+                        allBPMoves += "" + (i % 8 - 1) + (i % 8) + "BE";
+                    }
                 }
             }
         }
         return allBPMoves;
-
     }
 
     /** Returns all possible bishop moves.

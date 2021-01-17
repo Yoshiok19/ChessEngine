@@ -7,10 +7,6 @@ public class BoardRepresentation {
     public static void main(String[] args){
         // For debugging purposes
         generateBoard();
-        drawBoard(allBitboards);
-
-
-
 
     }
     public static void generateBoard() {
@@ -37,8 +33,9 @@ public class BoardRepresentation {
         WQ = allBitboards[4]; WK = allBitboards[5]; BP = allBitboards[6]; BB = allBitboards[7];
         BN = allBitboards[8]; BR = allBitboards[9]; BQ = allBitboards[10]; BK = allBitboards[11];
 
-        PerftTesting.perft(WP,WB,WN,WR,WQ,WK,BP,BB,BN,BR,BQ,BK,0,Moves.wkcastle, Moves.wqcastle, Moves.bkcastle, Moves.bqcastle, true);
+        PerftTesting.perft(WP,WB,WN,WR,WQ,WK,BP,BB,BN,BR,BQ,BK,0,Moves.wkcastle, Moves.wqcastle, Moves.bkcastle, Moves.bqcastle, true, "");
         System.out.println(PerftTesting.perftCounter);
+        System.out.println(PerftTesting.counter);
     }
 
 
@@ -130,10 +127,10 @@ public class BoardRepresentation {
                 chessBoard[i/8][i%8]="P";
             }
             if (((allBitboards[1]>>i)&1) == 1) {
-                chessBoard[i/8][i%8]="N";
+                chessBoard[i/8][i%8]="B";
             }
             if (((allBitboards[2]>>i)&1) == 1) {
-                chessBoard[i/8][i%8]="B";
+                chessBoard[i/8][i%8]="N";
             }
             if (((allBitboards[3]>>i)&1) == 1) {
                 chessBoard[i/8][i%8]="R";
@@ -148,10 +145,10 @@ public class BoardRepresentation {
                 chessBoard[i/8][i%8]="p";
             }
             if (((allBitboards[7]>>i)&1) == 1) {
-                chessBoard[i/8][i%8]="n";
+                chessBoard[i/8][i%8]="b";
             }
             if (((allBitboards[8]>>i)&1) == 1) {
-                chessBoard[i/8][i%8]="b";
+                chessBoard[i/8][i%8]="n";
             }
             if (((allBitboards[9]>>i)&1) == 1) {
                 chessBoard[i/8][i%8]="r";
