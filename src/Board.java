@@ -2,8 +2,9 @@ package src;
 
 import java.util.Arrays;
 
-public class BoardRepresentation {
+public class Board {
     static long[] allBitboards;
+    static String history;
     public static void main(String[] args){
         // For debugging purposes
         generateBoard();
@@ -33,9 +34,9 @@ public class BoardRepresentation {
         WQ = allBitboards[4]; WK = allBitboards[5]; BP = allBitboards[6]; BB = allBitboards[7];
         BN = allBitboards[8]; BR = allBitboards[9]; BQ = allBitboards[10]; BK = allBitboards[11];
 
-        PerftTesting.perft(WP,WB,WN,WR,WQ,WK,BP,BB,BN,BR,BQ,BK,0,Moves.wkcastle, Moves.wqcastle, Moves.bkcastle, Moves.bqcastle, true, "");
-        System.out.println(PerftTesting.perftCounter);
-        System.out.println(PerftTesting.counter);
+        Perft.perft(WP,WB,WN,WR,WQ,WK,BP,BB,BN,BR,BQ,BK,0,Moves.wkcastle, Moves.wqcastle, Moves.bkcastle, Moves.bqcastle, true, "");
+        System.out.println(Perft.perftCounter);
+        System.out.println(Perft.counter);
     }
 
 

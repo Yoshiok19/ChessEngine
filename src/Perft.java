@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-public class PerftTesting {
+public class Perft {
 
     static int MAX_DEPTH = 5;
     static boolean whiteToMove = true;
@@ -33,8 +33,9 @@ public class PerftTesting {
                         tempBP = Moves.makeMove(BP,moves.substring(i, i + 4), 'p'), tempBB = Moves.makeMove(BB,moves.substring(i, i + 4), 'b'),
                         tempBN = Moves.makeMove(BN,moves.substring(i, i + 4), 'n'),tempBR = Moves.makeMove(BR,moves.substring(i, i + 4), 'r'),
                         tempBQ = Moves.makeMove(BQ,moves.substring(i, i + 4), 'q'),tempBK = Moves.makeMove(BK,moves.substring(i, i + 4), 'k');
-                // Handling castling logic
                 long[] newBitBoards = new long[]{tempWP, tempWB, tempWN, tempWR, tempWQ, tempWK, tempBP, tempBB, tempBN, tempBR, tempBQ, tempBK};
+
+                // Handling castling logic
                 if (Character.isDigit(moves.charAt(i + 3))) {
                     // Getting the square number of the initial square
                     int start = (Character.getNumericValue(moves.charAt(i)) * 8) + (Character.getNumericValue(moves.charAt(i + 1)));
